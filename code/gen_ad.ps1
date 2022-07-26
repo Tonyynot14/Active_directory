@@ -5,6 +5,12 @@ function CreateAdGroup(){
     New-AdGroup -name $groupObject.Name  -GroupScope Global
 }
 
+function RemoveAdGroup(){
+    param([Parameter(Mandatory=$true)] $groupObject)
+    Remove-AdGroup -identity $groupObject.Name  -confirm:$false 
+
+}
+
 
 function CreateAdUser(){
     param([Parameter(Mandatory=$true)] $userObject)
@@ -22,8 +28,8 @@ function CreateAdUser(){
 
     foreach($group_name in $userObject.groups){
         try{
-            Get-ADGroup -identity $group_name.
-            AD-ADgroupmember -identity $group_name -members $username
+            Get-ADGroup -identity $group_name
+            add-ADgroupmember -identity $group_name -members $username
         }catch [Microsoft.ActiveDirectory.Management.ADIdentityNotFoundException]{
             Write-Output "User $name not added to group $group_name because it does not exist"
         }
@@ -31,9 +37,20 @@ function CreateAdUser(){
     }
 }
 
-    Write-Output $userObject
+function RemoveAdUser(){
+    param([Parameter(Mandatory=$true)] $userObject)
+  
+    $name = $userObject.Name
+    $firstname , $lastname = $name.split(" ")
+    $username = ($firstname[0] +$lastname).ToLower()
+    Remove-AdUser -identity $username  -confirm:$false 
+}
 
+function WeakenPasswordPolicy(){
+    Set-ADDefaultDomainPasswordPolicy -Identity $Global:Domain -MinPasswordLength 4  -ComplexityEnabled $false
+}
 
+WeakenPasswordPolicy
 
 $json = (Get-Content $JsonFile | ConvertFrom-Json)
 
@@ -41,11 +58,12 @@ $Global:Domain = $json.domain
 
 
 foreach($group in $json.groups){
-   
+    RemoveAdGroup $group
     CreateAdGroup $group
 }
 
 
 foreach($user in $json.users){
+    RemoveAdUser($user)
     CreateAdUser($user)
 }
