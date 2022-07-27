@@ -1,4 +1,5 @@
-param([Parameter(Mandatory=$true)] $JsonFile)
+param([Parameter(Mandatory=$true)] $JsonFile,
+    [switch] $reverse )
 
 function CreateAdGroup(){
     param([Parameter(Mandatory=$true)] $groupObject)
@@ -50,20 +51,35 @@ function WeakenPasswordPolicy(){
     Set-ADDefaultDomainPasswordPolicy -Identity $Global:Domain -MinPasswordLength 4  -ComplexityEnabled $false
 }
 
-WeakenPasswordPolicy
+function StrengthenPasswordPolicy(){
+    Set-ADDefaultDomainPasswordPolicy -Identity $Global:Domain -MinPasswordLength 8  -ComplexityEnabled $true
+}
+
 
 $json = (Get-Content $JsonFile | ConvertFrom-Json)
 
 $Global:Domain = $json.domain
 
 
-foreach($group in $json.groups){
-    RemoveAdGroup $group
-    CreateAdGroup $group
+if( -not $reverse){
+    WeakenPasswordPolicy
+    foreach($group in $json.groups){
+        CreateAdGroup $group
+    }
+    
+    
+    foreach($user in $json.users){
+        CreateAdUser($user)
+    }
+}else{
+    StrengthenPasswordPolicy
+
+    foreach($user in $json.users){
+        RemoveAdUser($user)
+    }
+    foreach($group in $json.groups){
+        RemoveAdGroup $group
+    }
 }
 
 
-foreach($user in $json.users){
-    RemoveAdUser($user)
-    CreateAdUser($user)
-}
