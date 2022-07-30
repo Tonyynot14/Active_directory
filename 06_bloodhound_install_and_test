@@ -1,0 +1,16 @@
+## Install bloodhound on Kali 
+
+https://bloodhound.readthedocs.io/en/latest/installation/linux.html
+
+1. Requires java
+2. Requires Neo4j
+	- This needs change to default username password neo4j:neo4j is intial
+
+3. Need to download new release of bloodhound 
+	-https://github.com/BloodHoundAD/BloodHound/releases 
+4. After install you need a collector either on a compromised Device or bloodhound.py running on linux. 
+	- https://github.com/fox-it/BloodHound.py
+5. This is the script I ran that collects all the information the collector can get (collection mode set to all)
+```script 
+	bloodhound-python  -u {username}  -p {password} -dc dc1.xyz.com --disable-autogc -d xyz.com -c all
+```
